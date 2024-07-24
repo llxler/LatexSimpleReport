@@ -1,0 +1,1 @@
+uint64 freemem_amount(void) { return kmem.npage << PGSHIFT; }
