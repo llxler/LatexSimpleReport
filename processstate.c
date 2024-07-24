@@ -1,0 +1,1 @@
+enum procstate { UNUSED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
