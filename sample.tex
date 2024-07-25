@@ -77,7 +77,7 @@
 \subsection{项目背景及意义}
 \subsection{国内外研究状况}
 \subsection{项目的主要工作}
-
+% TODO 完成开头部分
 \section{目标理念}
 
 \section{系统设计与实现}
@@ -102,7 +102,7 @@
 在 \texttt{Hajimi-OS} 中，分配新进程的过程由 \texttt{allocproc} 函数负责。这个函数主要执行以下步骤：
 \begin{enumerate}[label=\textbf{\arabic*}., wide, labelwidth=!, labelindent=0pt]
   \item \textbf{查找 UNUSED 状态的进程控制块：} 系统首先会扫描进程控制块数组，寻找一个状态为 \texttt{UNUSED} 的控制块。如果找到，程序跳转到 \texttt{found} 标签继续操作；如果未找到，则返回 \texttt{NULL}，表示当前没有可用的进程控制块，无法创建新进程。
-  \item \textbf{初始化进程控制块：} 找到未使用的进程控制块后，函数会分配一个新的进程 ID（通过调用 \texttt{allocpid} 函数），将虚拟内存地址\texttt{vma}设置为 \texttt{NULL}，并将内核时间\texttt{ktime}和用户时间\texttt{utime}初始化为 1。
+  \item \textbf{初始化进程控制块：} 找到未使用的进程控制块后，函数会分配一个新的进程 ID（通过调用 \texttt{allocpid} 函数) ，将虚拟内存地址\texttt{vma}设置为 \texttt{NULL}，并将内核时间\texttt{ktime}和用户时间\texttt{utime}初始化为 1。
   \item \textbf{分配 trapframe 页面：} 函数为新进程的 \texttt{trapframe} 分配内存（通过调用 \texttt{kalloc} 函数）。如果内存分配失败，函数将释放进程锁并返回 \texttt{NULL}。
   \item \textbf{创建用户和内核页表：} 成功分配 trapframe 页面后，函数创建一个空的用户页表（通过调用 \texttt{proc\_pagetable} 函数）和一个内核页表（通过调用 \texttt{proc\_kpagetable} 函数）。如果任一页表创建失败，函数会清理进程资源并返回 \texttt{NULL}。
   \item \textbf{配置内核堆栈\texttt{kstack}：} 成功分配页表后，函数会设置进程的内核堆栈地址，该地址是预设的虚拟地址。
@@ -171,15 +171,15 @@ context 用于保存当前进程的上下文，以便进程下次运行时恢复
 \paragraph{核心函数}
 \begin{enumerate}[label=\textbf{\arabic*}., wide, labelwidth=!, labelindent=0pt]
   \item \texttt{kfree} 该函数用于释放一个物理内存页，接收一个指向物理内存页的指针。函数首先检查传入的物理地址是否合法，然后将该物理内存页的内容清空，并将其添加到空闲内存页链表的头部。
-  \lstinputlisting[style=c-style]{kfree.c}
+        \lstinputlisting[style=c-style]{kfree.c}
   \item \texttt{kalloc} 该函数用于释放一个物理内存页，接收一个指向物理内存页的指针。函数首先检查传入的物理地址是否合法，然后将该物理内存页的内容清空，并将其添加到空闲内存页链表的头部。
-  \lstinputlisting[style=c-style]{kalloc.c}
+        \lstinputlisting[style=c-style]{kalloc.c}
   \item \texttt{kinit} 该函数在系统启动时调用，用于初始化物理内存管理系统。它首先初始化 \texttt{kmem} 中的自旋锁，然后调用 \texttt{freerange} 函数，将从内核结束地址 \texttt{kernel\_end} 到物理内存上限 \texttt{PHYSTOP} 之间的所有物理内存页添加到空闲列表中。
-  \lstinputlisting[style=c-style]{kinit.c}
+        \lstinputlisting[style=c-style]{kinit.c}
   \item \texttt{freerange} 此函数用于将一段物理内存地址范围内的所有物理内存页释放，并加入到空闲内存页链表中。它首先将起始地址向上取整到页的边界，然后从起始地址开始，每次增加一个页的大小（4096 字节），依次释放每个物理内存页。
-  \lstinputlisting[style=c-style]{freerange.c}
+        \lstinputlisting[style=c-style]{freerange.c}
   \item \texttt{freemem\_amount} 此函数返回当前系统中的空闲物理内存量。由于内存页的大小是固定的，所以直接将空闲内存页的数量左移 12 位即可得到空闲内存的字节数。
-  \lstinputlisting[style=c-style]{freemem_amount.c}
+        \lstinputlisting[style=c-style]{freemem_amount.c}
 \end{enumerate}
 
 
@@ -305,12 +305,141 @@ Hajimi-OS 的物理内存管理通过单一链表管理所有空闲内存页，�
 通过以上改进，Hajimi-OS 可以进一步优化内存管理，提高系统性能和安全性，满足更复杂和多样化的应用需求。
 
 \subsection{文件系统}
+% TODO: 文件系统
 
 \section{系统调用的设计实现}
+\subsection{系统调用流程}
+在 RISC-V 体系结构中，系统调用通过专用指令 \texttt{ecall} 实现。在用户态中，系统调用的参数保存在 \texttt{a0}、\texttt{a1} 等寄存器中，系统调用号则保存在 \texttt{a7} 寄存器中。当执行 \texttt{ecall} 指令时，会触发一次异常，进入异常处理流程。在系统初始化阶段，我们已经配置好了 \texttt{stvec} 寄存器，因此当异常发生时，操作系统将执行 \texttt{stvec} 寄存器指向的函数。
+
+异常发生后，首先需要将用户态寄存器和用户态进程需要保留的数据结构保存到一个指定的 \texttt{trapframe} 结构中，然后切换到内核态进行操作。我们会读取 \texttt{scause} 寄存器的值，如果其值为 8，即表明异常是由 \texttt{ecall} 指令触发的，接下来将进入系统调用的处理流程。
+
+为了处理系统调用，我们设计了一个函数指针数组，将每个系统调用号对应的函数保存在数组的相应位置。通过根据系统调用号调用对应的函数，我们能够执行相应的系统调用操作。这样的设计使系统能够根据不同的系统调用号调用相应的功能函数，实现了系统调用的灵活性和扩展性。
+
+\subsection{系统调用实现}
+\begin{enumerate}
+  \item \texttt{brk/sbrk\\} brk 是用于调整指定数据段大小的系统调用。此系统调用只有一个参数，该参数是目标数据段地址。用户程序通过 brk 系统调用向内核申请空间，系统将用户进程空间扩展到指定的数据段地址。
+
+        类似的，\texttt{sbrk} 系统调用的功能是根据参数调整地址空间大小。如果参数为正值，则分配相应大小的新地址空间；如果为负值，则释放相应大小的地址空间。
+
+        \texttt{brk} 和 \texttt{sbrk} 系统调用主要依赖于 \texttt{growproc} 函数来实现。\texttt{growproc} 函数根据传入参数的正负，分别调用 \texttt{uvmalloc} 和 \texttt{uvmdealloc} 函数来分配或释放物理内存。以下主要介绍 \texttt{uvmalloc} 和 \texttt{uvmdealloc} 函数的实现逻辑。
+
+        \texttt{uvmalloc 函数的核心代码如下}:
+        \lstinputlisting[style=c-style]{uvmalloc.c}
+        \texttt{uvmalloc} 函数的主体由一个循环构成，该循环遍历从原用户空间大小到新的用户空间大小之间的每一个页面（大小为 \texttt{PGSIZE}）。通过 \texttt{kalloc} 函数申请物理内存，申请成功后通过 \texttt{mappages} 函数创建 \texttt{PTE}（页表项），将虚拟内存映射到物理内存，并将 \texttt{PTEs} 添加到用户页表中。如果在以上任何步骤中发生错误，则立即释放此前分配的所有空间和 \texttt{PTE}，并退出函数。
+
+        接下来介绍 \texttt{uvmdealloc} 函数，该函数用于释放物理内存。主要实现方式是通过 \texttt{uvmummap} 函数释放对应区域的用户页表中的所有页表项。核心代码如下：
+        \lstinputlisting[style=c-style]{uvmdealloc.c}
+
+  \item \texttt{yield\\} \texttt{yield} 系统调用用于线程调度操作，其主要功能是让出内核线程调度器。当中断处理程序结束时，\texttt{usertrap} 调用 \texttt{yield}。具体流程如下：\texttt{yield} 调用 \texttt{sched}，\texttt{sched} 调用 \texttt{swtch}，将当前上下文保存在 \texttt{Proc->context} 中，并切换到先前保存在 \texttt{cpu->scheduler} 中的调度程序上下文。
+
+        \texttt{yield} 函数执行的操作如下：
+        首先，\texttt{yield} 获取进程的锁。加锁的主要目的是为了确保在锁释放之前，进程的状态保持一致。例如，\texttt{yield} 将进程状态改为 \texttt{RUNNABLE}，表示进程尚未运行，但实际上代码仍在当前进程的内核线程中执行。加锁可以防止其他 CPU 核心的调度器线程看到进程状态为 \texttt{RUNNABLE} 并尝试运行它，从而避免一个进程在两个 CPU 核心上同时运行的情况，因为在 Hajimi-OS 中，每个用户进程只有一个用户线程和一个栈。
+
+        接下来，\texttt{yield} 将进程的状态改为 \texttt{RUNNABLE}。这意味着当前进程将让出 CPU，并切换到调度器线程。将当前进程状态设为 \texttt{RUNNABLE} 意味着它在未来会再次运行，因为此次中断只是暂时打断了当前运行的进程。
+
+        \texttt{yield} 代码如下：
+        \lstinputlisting[style=c-style]{yield.c}
+
+        \texttt{yield} 函数中调用了 \texttt{sched} 函数，\texttt{sched} 函数在 Hajimi-OS 的进程调度中起着重要作用。\texttt{sched} 函数主要执行一些条件判断，防止异常情况的出现。随后，它调用 \texttt{swtch} 函数进行程序上下文切换（上下文信息存储在 \texttt{struct context} 中）。从一个用户进程（旧进程）切换到另一个用户进程（新进程）包括以下步骤：用户进程切换到内核线程（系统调用或中断），当前 CPU 切换到调度程序线程，新进程切换到内核线程，以及最后返回到用户级进程的 \texttt{trap} 程序。
+
+        \texttt{swtch} 函数用于执行内核线程的切换操作，包括保存和恢复上下文。\texttt{swtch} 对线程没有直接了解；它仅保存和恢复称为上下文（\texttt{contexts}）的寄存器集。当某个进程要放弃 CPU 时，该进程的内核线程调用 \texttt{swtch} 来保存自己的上下文并返回到调度程序的上下文。每个上下文包含在 \texttt{struct context} 中，而 \texttt{struct context} 本身包含在进程的 \texttt{struct proc} 或 CPU 的 \texttt{struct cpu} 中。\texttt{swtch} 接受两个参数：\texttt{struct context *old} 和 \texttt{struct context *new}。它将当前寄存器保存在 \texttt{old} 中，从 \texttt{new} 中加载寄存器，然后返回。这就是 \texttt{yield} 函数的完整调用流程。
+
+  \item \texttt{wait\\} \texttt{wait} 系统调用用于等待子进程结束。在 Hajimi-OS 中，当内核需要终止某父进程时，必须调用 \texttt{wait} 函数以确保所有子进程已结束，然后才能终止父进程。\texttt{wait} 函数的参数是一个指针，用于存储子进程中处于 ZOMBIE 状态的进程信息。
+
+        \texttt{wait} 函数的主要实现方法如下：首先，函数会遍历当前进程的子进程列表。如果没有子进程或当前进程已被终止，则函数直接退出。如果存在子进程，\texttt{wait} 函数会持续等待，直到某个子进程变为僵尸进程（\texttt{ZOMBIE}）。每次扫描子进程列表，如果没有发现僵尸进程，当前进程就进入睡眠状态。子进程调用 \texttt{exit} 后会唤醒父进程。如果找到处于 \texttt{ZOMBIE} 状态的子进程，函数会回收该子进程的页表、内核栈和进程控制块。
+
+  \item \texttt{read\\} \texttt{read} 系统调用用于操作系统的输入功能，该系统调用从指定的文件描述符读取内容。以下是 \texttt{read} 系统调用的参数：
+
+        \begin{itemize}
+          \item \texttt{fd}：要读取文件的文件描述符。
+          \item \texttt{buf}：用于存放读取内容的缓冲区。
+          \item \texttt{count}：要读取的字节数。
+        \end{itemize}
+
+        根据文件描述符的不同，处理不同类型的输入流，包括 \texttt{PIPE}、\texttt{DEVICE} 和 \texttt{ENTRY}。下面主要介绍 \texttt{DEVICE} 类型的输入流实现。Hajimi-OS 为每个设备维护一个结构体，并使用一个名为 \texttt{devsw} 的结构体数组来管理各设备的 IO 操作。以标准控制台输入为例，当 \texttt{read} 系统调用的文件描述符表示控制台输入时，会调用 \texttt{consoleread} 函数。
+
+        在 \texttt{consoleread} 函数中，程序等待输入到达（通过中断），并将输入缓存在 \texttt{cons.buf} 中。然后，将输入复制到用户空间，并在整行输入到达后返回给用户进程。如果用户尚未键入整行，任何读取进程将在 \texttt{sleep} 系统调用中等待。输入流如何到达 \texttt{cons.buf} 缓冲区的细节将在设备中断部分介绍。
+
+  \item \texttt{mmap\\} \texttt{mmap} 系统调用用于将文件或设备映射到内存中。以下是 \texttt{mmap} 系统调用的参数：
+
+        \begin{itemize}
+          \item \texttt{start}：映射起始位置，指定了映射区域在进程地址空间中的起始位置。可以指定一个虚拟内存地址，或者通过传递 \texttt{NULL} 让系统自动选择一个可用的地址。
+          \item \texttt{len}：映射长度，指定了映射区域的大小，以字节为单位，通常是页大小的整数倍。
+          \item \texttt{prot}：内存保护方式，定义了进程对映射区域的访问权限。常见的保护方式包括：\texttt{PROT\_READ}（可读取）、\texttt{PROT\_WRITE}（可写入）和 \texttt{PROT\_EXEC}（可执行）。
+          \item \texttt{flags}：映射标志，指定映射的共享方式和其他标志。常见的标志包括：\texttt{MAP\_SHARED}（共享映射区域）、\texttt{MAP\_PRIVATE}（私有映射区域）和 \texttt{MAP\_FIXED}（强制使用指定的起始地址进行映射）。
+          \item \texttt{fd}：文件描述符，通过该描述符确定要映射的文件。
+          \item \texttt{off}：文件偏移量，指定了从文件的哪个位置开始映射，通常用于指定文件的特定部分。
+        \end{itemize}
+
+        首先，函数获取当前进程的结构体指针，并检查参数的合法性。如果文件描述符 \texttt{fd} 小于 0、偏移量 \texttt{offset} 小于 0 或起始地址 \texttt{start} 不是页面大小 \texttt{PGSIZE} 的整数倍，则返回 -1 表示参数错误。
+
+        接下来，定义并初始化一个权限变量 \texttt{perm} 为 \texttt{PTE\_U}，表示用户级别的权限。如果保护方式 \texttt{prot} 包含 \texttt{PROT\_READ}，则将 \texttt{perm} 中加入 \texttt{PTE\_R} 和 \texttt{PTE\_A} 标志；如果包含 \texttt{PROT\_WRITE}，则将 \texttt{perm} 中加入 \texttt{PTE\_W} 和 \texttt{PTE\_D} 标志。
+
+        然后，根据文件描述符 \texttt{fd} 获取当前进程打开的文件结构体指针 \texttt{struct file *f} 。如果 \texttt{fd} 为 -1，则表示不关联任何文件，否则需要确保文件指针 \texttt{f} 不为空。
+
+        调用 \texttt{alloc\_mmap\_vma} 函数为当前进程分配一个 \texttt{vma} Virtual Memory Area 结构体，并传递相关参数。该函数将在进程的虚拟内存区域中创建一个新的映射区域 \texttt{vma} ，并返回 \texttt{vma} 结构体的指针。如果无法成功分配 \texttt{vma}，返回 -1 表示失败。
+
+        更新起始地址 \texttt{start} 为分配的 \texttt{vma} 的起始地址 \texttt{vma->addr} 。如果文件描述符 \texttt{fd} 不等于 -1，表示关联了一个文件，计算 \texttt{mmap} 的大小 \texttt{mmap\_size} ，即映射文件的大小减去偏移量。如果 \texttt{len} 小于 \texttt{mmap\_size}，则将 \texttt{mmap\_size} 设置为 \texttt{len}。然后将文件的偏移量 \texttt{f->off} 设置为给定的偏移量 \texttt{offset} 。
+
+        接下来，计算 \texttt{mmap\_size} 对页面大小 \texttt{PGSIZE} 求余的结果 \texttt{end\_pagespace} ，以及需要映射的页面数目 \texttt{page\_n} 。定义一个虚拟地址变量 \texttt{va} ，并初始化为起始地址 \texttt{start} 。
+
+        进入循环，循环次数为页面数目 \texttt{page\_n} 。在每次循环中，通过调用 \texttt{experm} 函数将虚拟地址 \texttt{va} 映射到物理地址 \texttt{pa} ，并传递权限变量 \texttt{perm} 。如果映射失败 \texttt{pa} 为 \texttt{NULL} ，返回 -1 表示失败。
+
+        在循环中，根据当前循环的页是否为最后一页进行不同操作。如果不是最后一页，调用 \texttt{fileread} 函数从文件中读取 \texttt{PGSIZE} 大小的数据并写入虚拟地址 \texttt{va} 指向的内存。如果是最后一页，调用 \texttt{fileread} 函数从文件中读取 \texttt{end\_pagespace} 大小的数据并写入虚拟地址 \texttt{va} 指向的内存，然后使用 \texttt{memset} 函数将剩余部分 \texttt{PGSIZE-end\_pagespace} 的内存清零。
+
+        循环结束后，调用 \texttt{filedup} 函数增加文件结构体的引用计数，以确保在 \texttt{mmap} 映射期间文件不会被关闭。最后，返回起始地址 \texttt{start} ，表示 \texttt{mmap} 映射成功。
+
+        接下来，展示 \texttt{vma} 的结构：
+        \lstinputlisting[style=c-style]{vma.c}
+        \texttt{struct vma} 结构体表示一个虚拟内存区域。它包含该区域的类型、起始地址、大小、访问权限、结束地址、关联的文件描述符和文件偏移量等信息。通过指针 \texttt{prev} 和 \texttt{next}，可以将多个 \texttt{VMA} 连接成链表。
+        \begin{itemize}
+          \item \texttt{vma\_init\\}
+                该函数用于初始化进程的 \texttt{VMA}，并返回指向 \texttt{VMA} 结构体的指针。它接受一个指向进程结构体的指针作为参数。在函数内部，会为 \texttt{VMA} 结构体分配内存，并对各字段进行初始化。然后，它将 \texttt{VMA} 结构体与进程关联，并创建一个初始的 \texttt{MMAP} 类型的 \texttt{VMA}，起始地址为 \texttt{USER\_MMAP\_START}，大小为 0。如果在分配和初始化过程中出现错误，则返回 \texttt{NULL}。
+
+          \item \texttt{alloc\_vma\\}
+                该函数用于分配一个 \texttt{VMA} 并将其插入进程的 \texttt{VMA} 链表中。它接受进程指针 \texttt{p}、\texttt{VMA} 类型 \texttt{type}、\texttt{VMA} 的起始地址 \texttt{addr}、大小 \texttt{sz}、访问权限 \texttt{perm}、是否进行内存分配 \texttt{alloc}、物理地址 \texttt{pa} 等参数。函数首先根据地址和大小检查是否存在冲突的 \texttt{VMA}，然后分配一个 \texttt{VMA} 结构体，并根据 \texttt{alloc} 的值进行内存分配或者页面映射。最后，将 \texttt{VMA} 结构体的各个字段赋值，并插入进程的 \texttt{VMA} 链表中。如果分配或者映射过程中出现错误，则返回 \texttt{NULL}。
+
+          \item \texttt{find\_mmap\_vma\\}
+                该函数用于在给定的 \texttt{VMA} 链表中查找类型为 \texttt{MMAP} 的 \texttt{VMA}。它接受一个指向 \texttt{VMA} 链表头结点的指针，并通过遍历链表来查找类型为 \texttt{MMAP} 的 \texttt{VMA}。如果找到，则返回该 \texttt{VMA} 的指针；否则返回 \texttt{NULL}。
+
+          \item \texttt{alloc\_mmap\_vma\\}
+                该函数用于为进程分配一个 \texttt{MMAP} 类型的 \texttt{VMA}。它接受进程指针 \texttt{p}、标志 \texttt{flags}、起始地址 \texttt{addr}、大小 \texttt{sz}、访问权限 \texttt{perm}、文件描述符 \texttt{fd} 和文件偏移量 \texttt{f\_off} 等参数。函数首先通过调用 \texttt{find\_mmap\_vma} 函数找到 \texttt{MMAP} 类型的 \texttt{VMA}，然后根据给定的参数分配一个新的 \texttt{VMA}，并将其插入进程的 \texttt{VMA} 链表中。最后，设置新的 \texttt{VMA} 的文件描述符和文件偏移量，并返回该 \texttt{VMA} 的指针。如果分配过程中出现错误，则返回 \texttt{NULL}。
+        \end{itemize}
+
+  \item \texttt{clone\\}
+        \texttt{clone} 系统调用用于创建一个子进程。以下是 \texttt{clone} 系统调用的参数：
+
+        \begin{itemize}
+          \item \texttt{flags}：创建的标志，如 \texttt{SIGCHLD}。
+          \item \texttt{stack}：指定新进程的栈地址，可为 0。
+          \item \texttt{ptid}：父线程 ID。
+          \item \texttt{tls}：线程本地存储（TLS）描述符。
+          \item \texttt{ctid}：子线程 ID。
+        \end{itemize}
+
+        \texttt{clone} 函数是相对于 Hajimi-OS 中原有的 \texttt{fork} 函数的一个改进版本。在 \texttt{clone} 系统调用中，可以指定一个新的用户栈空间。 \texttt{clone} 函数接收一个预先分配的用户空间虚拟地址作为用户栈，并将子进程的 \texttt{proc} 结构体的 \texttt{sp} 属性改为对应的用户栈地址。
+
+        此外，与 \texttt{fork} 函数类似，\texttt{clone} 函数需要复制父进程的用户空间，即子线程将共享父进程的进程页表。父进程使用的文件描述符也需要复制给子进程。以下是 \texttt{clone} 函数的核心代码：
+        \lstinputlisting[style=c-style]{clone.c}
+        可以看到，\texttt{clone} 函数和 \texttt{fork} 函数的主体部分非常相似，主要完成以下任务：
+
+        \begin{itemize}
+          \item 分配任务结构体，初始化任务结构体；
+          \item 分配内核栈，模拟上下文填充内核栈；
+          \item 复制父进程的数据，创建新的页表；
+          \item 复制文件描述符表；
+          \item 修改进程结构体属性。
+        \end{itemize}
+
+\end{enumerate}
+
+
 
 \section{系统测试}
+% TODO 系统测试
 
 \section{总结与展望}
+% TODO 总结与展望
 
 
 % % Insert an image, with placement specifier htbp
