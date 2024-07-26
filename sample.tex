@@ -16,18 +16,17 @@
 % Declare directories to search for graphics files for graphicx
 \graphicspath{{figures/}}
 
-% Define source code style for listings
 \lstdefinestyle{c-style}{
   language=C,
-  basicstyle=\ttfamily\small\fontfamily{pcr}\selectfont, % 使用 Courier New 字体
+  basicstyle=\ttfamily\small,
   keywordstyle=\bfseries\color{blue},
-  identifierstyle=\color{black},
-  stringstyle=\color{red},
-  commentstyle=\itshape\color{gray},
-  backgroundcolor=\color{gray!3},
+  identifierstyle=\color{teal},
+  stringstyle=\color{purple},
+  commentstyle=\itshape\color{green!50!black},
+  backgroundcolor=\color{gray!5},
   numbers=left,
-  numberstyle=\tiny\color{gray},
   numbersep=8pt,
+  numberstyle=\tiny\color{gray},
   breaklines=true,
   postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
   frame=single,
@@ -35,10 +34,6 @@
   rulecolor=\color{black},
   tabsize=4,
   captionpos=b,
-  xleftmargin=15pt,
-  xrightmargin=15pt,
-  aboveskip=10pt,
-  belowskip=10pt,
   showspaces=false,
   showstringspaces=false,
   showtabs=false,
@@ -73,10 +68,10 @@
 \setstretch{1.6}
 
 % Main content
-\section{作品介绍}
+\section{介绍}
 Hajimi-OS 是一款面向现代计算需求而设计的操作系统，运行在 RISC-V 架构上。它不仅仅是一个操作系统，而是一个通过整合前沿技术、提升系统性能和安全性，为用户提供全新计算体验的创新项目。Hajimi-OS 的设计理念来自于多种经典操作系统的精华，并结合了当前计算领域的发展趋势和需求。
 
-\subsection{项目背景及意义}
+\subsection{作品意义与背景}
 在当今信息化社会，操作系统作为计算机系统的核心，其重要性不言而喻。操作系统不仅管理硬件资源，还为应用程序提供运行环境和接口。随着物联网、大数据和人工智能等新兴技术的发展，传统的操作系统面临着性能、安全性和扩展性的多重挑战。
 
 Hajimi-OS 的开发背景源于对现有操作系统在面对新技术需求时的不足进行改进。通过模块化设计和微内核架构，Hajimi-OS 力图在保持高效性和稳定性的同时，提供更强的兼容性和扩展性。我们的目标是打造一个灵活、安全且高效的操作系统，以应对未来的计算挑战。
@@ -110,7 +105,7 @@ Hajimi-OS 的开发背景源于对现有操作系统在面对新技术需求时�
   \item 新硬件支持：随着多核处理器、非易失性内存和量子计算机等新硬件的发展，如何更好地利用这些硬件也是操作系统研究的重要方向。
 \end{itemize}
 
-\subsection{项目的主要工作}
+\subsection{主要工作}
 Hajimi-OS 项目作品的开发工作涵盖了从内核设计到用户界面的一系列任务，具体包括以下几个方面：
 
 \begin{itemize}
@@ -124,7 +119,7 @@ Hajimi-OS 项目作品的开发工作涵盖了从内核设计到用户界面的�
 
 Hajimi-OS 致力于为用户提供高性能、高安全性且用户友好的操作系统。我们希望通过这一项目，不仅为用户提供更好的计算体验，也为操作系统技术的发展贡献力量。未来，我们将继续完善和优化 Hajimi-OS，探索更多前沿技术，并与学术界和工业界的伙伴们合作，共同推动操作系统领域的创新和进步。
 
-\section{目标理念}
+\section{理念与目标}
 在 Hajimi-OS 项目的开发过程中，我们设定了实现一系列系统调用的目标，以满足操作系统的基本功能需求。系统调用是操作系统与应用程序之间的接口，提供了执行各种操作的基本功能。在操作系统的设计与实现过程中，为了确保系统的功能完备性和稳定性，我们依据具体需求定义了一组系统调用编号。这些编号不仅涵盖了基本的操作系统功能，还包括了一些增强功能，以支持更多的应用场景和操作。
 
 我们定义了如下系统调用编号：
@@ -132,7 +127,7 @@ Hajimi-OS 致力于为用户提供高性能、高安全性且用户友好的操�
 
 为了充分支持操作系统的功能性评测，我们需要确保系统能够处理这些调用，并且提供必要的扩展性。Hajimi-OS 不仅要支持这些标准系统调用，还要提供一些额外的功能，如增强的文件系统支持、进程管理功能等。这些系统调用的设计和实现体现了我们对操作系统功能和性能的高标准要求，以及对未来扩展性和灵活性的前瞻性考虑。通过这样精心设计的系统调用，我们希望 Hajimi-OS 能够在多种应用场景中表现出色，为用户提供稳定、高效的操作体验。
 
-\section{系统设计与实现}
+\section{设计与实现}
 \subsection{进程管理}
 进程管理模块的主要功能包括：初始化进程、加载和解析进程、切换进程，以及构建进程状态模块。具体功能介绍如下。
 \subsubsection{进程控制块}
