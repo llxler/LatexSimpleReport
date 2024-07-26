@@ -10,35 +10,42 @@
 \usepackage{enumitem} % Enumerate and itemize
 \usepackage{setspace} % Set line spacing
 
+% TODO: 添加文件系统，修改措辞，错误用词。
+
 % Customize hyperref format (it's set to no special format here)
 \hypersetup{hidelinks}
 
 % Declare directories to search for graphics files for graphicx
 \graphicspath{{figures/}}
 
+% Set c style for lstlisting
 \lstdefinestyle{c-style}{
   language=C,
-  basicstyle=\ttfamily\small,
-  keywordstyle=\bfseries\color{blue},
-  identifierstyle=\color{teal},
-  stringstyle=\color{purple},
-  commentstyle=\itshape\color{green!50!black},
-  backgroundcolor=\color{gray!5},
-  numbers=left,
-  numbersep=8pt,
-  numberstyle=\tiny\color{gray},
-  breaklines=true,
-  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
-  frame=single,
-  framerule=0.5pt,
-  rulecolor=\color{black},
-  tabsize=4,
-  captionpos=b,
-  showspaces=false,
-  showstringspaces=false,
-  showtabs=false,
-  morekeywords={*,printf,scanf},
+  basicstyle=\ttfamily\small, % 基本字体样式和大小
+  keywordstyle=\bfseries\color{blue!70!black}, % 关键字样式
+  identifierstyle=\color{teal}, % 标识符样式
+  stringstyle=\color{purple}, % 字符串样式
+  commentstyle=\itshape\color{green!70!black}, % 注释样式
+  backgroundcolor=\color{gray!10}, % 背景颜色
+  numbers=left, % 行号在左边
+  numberstyle=\tiny\color{gray}, % 行号字体样式
+  numbersep=6pt, % 行号与代码间的距离
+  breaklines=true, % 自动换行
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}, % 换行符号
+  frame=single, % 单线框
+  framerule=0.5pt, % 框线宽度
+  rulecolor=\color{black}, % 框线颜色
+  tabsize=4, % 制表符宽度
+  captionpos=b, % 标题位置在下方
+  showspaces=false, % 不显示空格
+  showstringspaces=false, % 不显示字符串中的空格
+  showtabs=false, % 不显示制表符
+  morekeywords={*,printf,scanf}, % 更多关键字
   escapeinside={(*@}{@*)}, % 支持代码中插入LaTeX
+  xleftmargin=2em, % 左侧边距
+  xrightmargin=2em, % 右侧边距
+  aboveskip=1em, % 代码块与上下文的间距
+  belowskip=1em % 代码块与上下文的间距
 }
 
 % Define new command for title page
@@ -60,6 +67,7 @@
 \maketitle
 
 % Table of contents
+\setstretch{1.2} % 刚好能让目录在一页内
 \newpage
 \tableofcontents
 \newpage
@@ -81,7 +89,7 @@ Hajimi-OS 的开发背景源于对现有操作系统在面对新技术需求时�
   \item 提升计算机教育质量：当前的计算机教育中，理论与实践的结合尚有不足。通过 Hajimi-OS，我们希望提供一个完整的操作系统开发实验平台，使学生能够深入理解操作系统的核心概念和实现机制，从而提升他们的实践能力和理论理解。
   \item 推动操作系统技术进步：Hajimi-OS 采用了许多前沿技术和设计理念，如 RISC-V 架构、微内核设计等。通过这一项目，我们希望为操作系统领域带来新的思路和突破，推动技术的不断进步。
   \item 增强系统安全性和性能：面对日益严峻的网络安全威胁和不断增长的计算需求，Hajimi-OS 在安全性和性能优化方面进行了大量创新设计，旨在提供一个更加安全、高效的操作系统环境。
-  \item 促进自主创新和开源合作：作为一个开源项目，Hajimi-OS 鼓励开发者参与其中，共同改进和完善系统。通过开源社区的合作，我们希望推动操作系统技术的共享和创新。
+  \item 促进自主创新和开源合作：通过开源社区的合作，我们希望推动操作系统技术的共享和创新。
 \end{itemize}
 
 \subsection{国内外研究状况}
@@ -507,6 +515,34 @@ Hajimi-OS 进程拥有独立页表，映射其虚拟地址空间到物理内存�
 Hajimi-OS 使用 \texttt{CMake} 构建，但是初赛测试需要先调用 \texttt{make all} 构建内核，所以 Hajimi-OS 通过在 \texttt{Makefile} 里面调用 \texttt{CMake} 的方式来通过测评。
 
 \section{总结与展望}
-% TODO 总结与展望
+\subsection{总结}
+
+在本文档中，我们详细介绍了 Hajimi-OS 操作系统的实现和测试流程。我们首先讨论了进程管理的核心功能，包括进程控制块的设计、进程状态的管理、进程分配、加载与解析过程，以及进程调度和释放的机制。Hajimi-OS 的进程管理模块通过精确的设计，实现了对进程生命周期的有效管理，确保了系统的稳定性和响应性。
+
+在内存管理方面，我们详细阐述了物理内存和虚拟内存的管理策略。Hajimi-OS 采用了简单高效的物理内存分配与回收算法，通过链表管理空闲内存页，保证了内存的有效使用。同时，我们介绍了虚拟内存管理中的页表结构和地址转换机制，强调了 RISC-V 的 Sv39 配置如何影响内存映射和分页操作。这些设计有效地支持了系统对虚拟内存空间的管理，并提高了内存访问的效率。
+
+在文件系统方面，Hajimi-OS 采用了成熟且高效的 ext4 文件系统。ext4 文件系统以其高性能、可靠性和扩展性而闻名，它提供了先进的日志记录功能，确保了数据的完整性和一致性。此外，ext4 还支持大文件、高效的文件检索以及灵活的文件权限设置，这些都为 Hajimi-OS 提供了强大的文件管理能力。通过对 ext4 文件系统的深度集成，我们不仅提升了系统的文件操作性能，也增强了数据管理的安全性。
+
+总的来看，Hajimi-OS 在进程管理、内存管理和文件系统方面展现了扎实的基础和高效的实现，为系统的稳定运行提供了坚实的保障。通过对各个模块的深入分析，我们对操作系统的核心机制有了更全面的理解，也为后续的优化和改进奠定了基础。
+
+\subsection{展望}
+
+尽管 Hajimi-OS 已经在进程管理、内存管理和文件系统方面取得了显著成果，但仍有一些改进空间值得关注。未来的工作可以围绕以下几个方面展开：
+
+\begin{enumerate}
+  \item \textbf{进程调度优化：} 当前，Hajimi-OS 采用的是时间片均分策略进行进程调度。为提高系统的响应性和吞吐量，未来可以考虑引入更复杂的调度算法，如优先级调度或多级反馈队列。这些算法能够更好地适应不同进程的需求，优化系统的整体性能。
+
+  \item \textbf{内存管理改进：} 未来可以探索支持大页分配和引入更先进的内存分配策略，如伙伴系统或 slab 分配器。此外，改进锁机制以提高并发性能也是一个重要的方向。通过这些改进，系统可以更高效地管理内存资源，提升性能。
+
+  \item \textbf{虚拟内存扩展：} 虚拟内存管理方面，虽然现有的 Sv39 配置满足了基本需求，但随着应用需求的增长，未来可能需要支持更大范围的虚拟地址空间。可以考虑扩展到 Sv48 配置，以支持更大的内存空间和更复杂的地址转换。
+
+  \item \textbf{文件系统优化：} 虽然 ext4 文件系统已经提供了稳定和高效的文件管理能力，但未来可以探索引入更多现代文件系统特性，如支持更高效的存储方案、改进的文件压缩和加密技术等。此外，进一步优化文件系统的性能，以适应更大规模的存储需求，也是一个值得关注的方向。
+
+  \item \textbf{安全性与可靠性：} 随着系统复杂度的增加，安全性和可靠性成为不可忽视的因素。未来可以引入更多的安全机制，如地址空间布局随机化（ASLR）和执行保护等，提升系统的安全性。同时，通过更多的测试和验证，确保系统在各种环境下的稳定运行。
+
+  \item \textbf{用户体验与界面改进：} 在系统的用户界面和交互体验方面，也可以进行一些优化。考虑到用户的实际需求，未来可以加入更多友好的图形界面和工具，提高系统的易用性和可管理性。
+\end{enumerate}
+
+通过上述改进，Hajimi-OS 可以在现有基础上进一步提升其功能和性能，为操作系统领域的发展做出更大的贡献。同时，这些改进方向也为操作系统的研究和开发提供了新的挑战和机会。
 
 \end{document}
