@@ -8,9 +8,7 @@
 \usepackage{hyperref} % Hypertext links support for cross-referencing
 \usepackage{geometry} % Page layout
 \usepackage{enumitem} % Enumerate and itemize
-\usepackage{setspace} % Set line spacing
-
-% TODO: 添加文件系统，修改措辞，错误用词。
+\usepackage{setspace} % Set line spacing。
 
 % Customize hyperref format (it's set to no special format here)
 \hypersetup{hidelinks}
@@ -55,19 +53,33 @@
 \newcommand{\reportinfo}[2]{
   \large\makebox[4em]{\textsf{#1}}\quad\underline{\makebox[18em]{#2}}
 }
+\newcommand{\smallertitlefont}[2]{{\fontsize{#1}{1.2\baselineskip}\selectfont\mdseries #2}}
+\newcommand{\smallermaintitlefont}[2]{{\fontsize{#1}{1.2\baselineskip}\selectfont\bfseries #2}}
+\newcommand{\Modified}[1]{{}}
+% \newcommand{\TODO}[1]{{}}
+\newcommand{\Add}[1]{{}}
+\newcommand{\TODO}[1]{\textbf{(TODO: {#1})}}
 
 % ----- The document begins here -----
 \begin{document}
 
 % Title page
-\title{\Huge Hajimi-OS 作品文档}
-\author{夏彦文 \thanks{学生，计算机学院数据科学与大数据} \and 雷翔麟 \thanks{学生，计算机科学与技术学院}
-  \and 邹扬 \thanks{学生，计算机学院数据科学与大数据} \and 潘鹏 \thanks{指导教师，计算机科学与技术学院}}
+\title{ \bfseries{\Huge Hajimi-OS 作品文档}}
+\author{\smallermaintitlefont{15pt}{队名：厚积薄发队}  \\[10pt] \smallertitlefont{12pt}{\textbf{团队成员：邹扬，夏彦文，雷翔麟  }}
+  \\[10pt] \smallertitlefont{12pt}{\textbf{指导老师：潘鹏  }}
+  \\[320pt] \smallertitlefont{12pt}{\textbf{计算机科学与技术学院}}
+  \\[10pt] \smallertitlefont{12pt}{\textbf{华中科技大学}}
+}
+
+% \author{\smallermaintitlefont{15pt}{邹扬，夏彦文，雷翔麟}}
+% \author{夏彦文 \thanks{学生，计算机学院数据科学与大数据} \and 雷翔麟 \thanks{学生，计算机科学与技术学院}
+%   \and 邹扬 \thanks{学生，计算机学院数据科学与大数据} \and 潘鹏 \thanks{指导教师，计算机科学与技术学院}}
+% \institution{Huazhong University of Science and Technology}
 \date{\today}
 \maketitle
 
 % Table of contents
-\setstretch{1.2} % 刚好能让目录在一页内
+\setstretch{1.1} % 刚好能让目录在一页内
 \newpage
 \tableofcontents
 \newpage
@@ -360,7 +372,161 @@ Hajimi-OS 进程拥有独立页表，映射其虚拟地址空间到物理内存�
 通过以上改进，Hajimi-OS 可以进一步优化内存管理，提高系统性能和安全性，满足更复杂和多样化的应用需求。
 
 \subsection{文件系统}
-% TODO: 文件系统
+\texttt{Oracle EXT4}（第四代扩展文件系统）是 \texttt{EXT} 文件系统家族的一个成员，被广泛用于 \texttt{Linux} 操作系统中。\texttt{EXT4} 是 \texttt{EXT3} 的后续版本，提供了许多改进和新功能，以提高性能、可靠性和可扩展性。
+\subsubsection{\texttt{ext4} 文件系统的优越性}
+
+\texttt{ext4} 文件系统相对于 \texttt{FAT32} 文件系统，在多个方面表现出显著的优越性：
+
+\paragraph{支持大文件和大容量}
+\texttt{ext4} 支持最大 1 EB（Exabyte，约 1 百万 TB）的文件系统和 16 TB 的单文件，而 \texttt{FAT32} 文件系统仅能支持最大 2 TB 的文件系统和 4 GB 的单文件。因此，\texttt{ext4} 更适合现代大规模数据存储需求，如高性能计算和大数据应用。
+
+\paragraph{性能优化}
+\texttt{ext4} 通过引入多项性能优化技术，大幅提升了读写效率：
+\begin{itemize}
+  \item \textbf{延迟分配（Delayed Allocation）}：通过推迟块分配的时间点，减少文件碎片的产生，提高写入性能。
+  \item \textbf{多块分配（Multiblock Allocation）}：允许文件系统一次性分配多个块，提升大文件写入的性能。
+  \item \textbf{持久预留块（Persistent Preallocation）}：支持为文件预留连续的磁盘块，确保文件在写入时不产生碎片。
+\end{itemize}
+
+\paragraph{可靠性提升}
+\texttt{ext4} 提供了更强的数据一致性保证。例如，通过日志校验防止元数据损坏。此外，还引入了快速文件系统检查（fsck），通过多个块组描述符备份，使文件系统检查过程更加快速和高效。而 \texttt{FAT32} 的错误恢复和一致性保证较弱，容易导致数据损坏和丢失。
+
+\paragraph{扩展特性支持}
+\texttt{ext4} 支持如符号链接、硬链接、访问控制列表（ACL）、扩展属性（Extended Attributes）等高级特性，使其在灵活性和安全性方面远超 \texttt{FAT32} 文件系统。特别是 ACL 的支持，允许更细粒度的权限控制，提高了系统的安全性。
+
+\paragraph{向后兼容}
+\texttt{ext4} 保持了与 \texttt{ext3} 的向后兼容性，用户可以无缝迁移现有的 \texttt{ext3} 文件系统到 \texttt{ext4}，而不需要重新格式化或丢失数据。这种设计极大地方便了系统升级和数据迁移。
+
+\subsubsection{\texttt{ext4} 的新特性}
+
+\texttt{ext4} 文件系统在 \texttt{ext3} 的基础上引入了许多新特性，使其更加适应现代数据存储和管理的需求：
+
+\begin{itemize}
+  \item \textbf{延迟分配（Delayed Allocation）}：推迟块分配，减少文件碎片，提升写入性能。
+  \item \textbf{多块分配（Multiblock Allocation）}：一次性分配多个块，提升大文件写入性能。
+  \item \textbf{持久预留块（Persistent Preallocation）}：预留连续的磁盘块，确保文件不产生碎片。
+  \item \textbf{日志校验（Journal Checksumming）}：对日志进行校验，提高文件系统可靠性。
+  \item \textbf{在线碎片整理（Online Defragmentation）}：挂载时进行碎片整理，优化磁盘使用。
+  \item \textbf{快速文件系统检查（Fast fsck）}：多个块组描述符备份，加快文件系统检查过程。
+\end{itemize}
+
+这些特性使 \texttt{ext4} 文件系统在处理大文件和高并发读写操作时表现优异，特别适用于服务器和数据库应用场景。
+
+\subsubsection{\texttt{ext4} 流行性与实用性}
+
+\texttt{ext4} 文件系统在现代操作系统中具有广泛的流行性与实用性：
+
+\paragraph{广泛应用}
+\texttt{ext4} 文件系统被广泛应用于各类 Linux 发行版，如 \texttt{Ubuntu}、\texttt{Debian}、\texttt{Fedora} 等，成为默认的文件系统选择。这得益于 \texttt{ext4} 的稳定性、高性能和丰富特性。
+
+\paragraph{高性能}
+\texttt{ext4} 的性能优化技术使其在各种工作负载下表现优异，无论是桌面应用、服务器还是高性能计算环境，都能提供可靠的性能支持。其先进的读写优化机制，使得大文件操作和高并发读写得以顺畅进行。
+
+\paragraph{大规模数据管理}
+\texttt{ext4} 支持大文件和大容量文件系统，特别适用于现代的数据密集型应用，如大数据存储、云计算等。其扩展属性和访问控制列表（ACL）功能，进一步增强了数据管理的灵活性和安全性。
+
+\paragraph{社区支持}
+作为 Linux 内核的一个重要组成部分，\texttt{ext4} 享有广泛的社区支持和持续的开发维护，不断引入新特性和优化，保持其先进性。强大的社区支持确保了 \texttt{ext4} 的稳定性和安全性。
+
+\paragraph{易于管理}
+\texttt{ext4} 提供了丰富的管理工具和选项，允许用户灵活配置和维护文件系统，简化了系统管理的复杂性。例如，文件系统的在线碎片整理和快速文件系统检查，使得管理员可以轻松维护系统的性能和可靠性。
+
+\subsubsection{Hajimi-OS 对 \texttt{ext4} 的适配}
+\paragraph{bio.c\\}
+
+\paragraph{buf.h\\}
+
+\texttt{buf.h} 文件定义了 \texttt{ext4} 文件系统在 Hajimi-OS 中的缓冲区管理相关内容，包含以下几个重要部分：
+
+\begin{lstlisting}[style=c-style]
+#ifndef __BUF_H
+#define __BUF_H
+
+#define BSIZE 4096
+#include <fs/ext4/ext4.h>
+#include <fs/ext4/ext4_blockdev.h>
+#include <fs/ext4/ext4_config.h>
+#include <fs/ext4/ext4_types.h>
+#include <fs/ext4/ext4_misc.h>
+#include <fs/ext4/ext4_errno.h>
+#include <fs/ext4/ext4_debug.h>
+#include <fs/ext4/ext4_super.h>
+#include <fs/ext4/ext4_block_group.h>
+#include <fs/ext4/ext4_dir.h>
+#include <fs/ext4/ext4_dir_idx.h>
+#include <fs/ext4/ext4_fs.h>
+#include <fs/ext4/ext4_inode.h>
+#include <fs/ext4/ext4_ialloc.h>
+#include <fs/ext4/ext4_mkfs.h>
+\end{lstlisting}
+
+首先，\texttt{buf.h} 引入了一系列 \texttt{ext4} 文件系统相关的头文件，这些头文件定义了 \texttt{ext4} 文件系统的基本结构和功能，如超级块、块组、目录、索引、文件系统、inode、文件分配等。
+
+\begin{lstlisting}[style=c-style]
+#define MAX_FILE 50                    // 最大文件数
+#define EXT4_MAX_FILENAME 255          // 最大文件名长度
+
+// 文件属性标志
+#define EXT4_ATTR_READ_ONLY 0x01       // 只读属性
+#define EXT4_ATTR_HIDDEN 0x02          // 隐藏属性
+#define EXT4_ATTR_SYSTEM 0x04          // 系统文件属性
+#define EXT4_ATTR_VOLUME_ID 0x08       // 卷标属性
+#define EXT4_ATTR_DIRECTORY 0x10       // 目录属性
+#define EXT4_ATTR_ARCHIVE 0x20         // 存档属性
+#define EXT4_ATTR_LONG_NAME 0x0F       // 长文件名属性
+\end{lstlisting}
+
+接下来定义了相关的常量，包括最大文件数量、最大文件名长度，以及文件属性标志，这些标志包括只读、隐藏、系统、卷标识、目录、存档、长文件名等。
+
+\begin{lstlisting}[style=c-style]
+/**
+ * @brief Represents a directory entry in the ext4 file system.
+ * 
+ * The ext4_dirent struct contains information about a directory entry,
+ * including the filename, file and directory information, lock, parent,
+ * next and previous directory entries, device, dirty flag, validity,
+ * reference count, attribute, offset, ID, current block, block count,
+ * and existence in the disk.
+ */
+struct ext4_dirent {
+  char filename[EXT4_MAX_FILENAME];  // 文件名，长度为 EXT4_MAX_FILENAME
+  struct ext4_file file;             // 文件结构
+  struct ext4_dir dir;               // 目录结构
+  struct sleeplock lock;             // 睡眠锁，用于同步
+  struct ext4_dirent *parent;        // 指向父目录的指针
+  struct ext4_dirent *next;          // 指向下一个目录项的指针
+  struct ext4_dirent *prev;          // 指向上一个目录项的指针
+  uint8 dev;                         // 设备号
+  uint8 dirty;                       // 脏标志，表示是否有未写入磁盘的更改
+  short valid;                       // 有效标志，表示目录项是否有效
+  int ref;                           // 引用计数
+  uint8 attribute;                   // 文件属性
+  uint32_t off;                      // 文件在目录中的偏移
+  uint16_t id;                       // 目录项的唯一标识符
+  uint32 cur_block;                  // 当前块号
+  uint block_cnt;                    // 块计数
+  uint8 exist_in_disk;               // 存在于磁盘标志
+};
+\end{lstlisting}
+
+定义了 \texttt{ext4\_dirent} 结构体，它表示一个目录项，其中包含文件名、文件结构体、目录结构体、锁、父目录项、前后目录项指针、设备号、是否脏数据标志、有效标志、引用计数、属性、偏移量、ID、当前块号、块计数以及是否存在于磁盘上的标志。
+
+\begin{lstlisting}[style=c-style]
+struct buf {
+  int valid;              // Flag indicating if the buffer is valid
+  int disk;               // Disk number
+  uint dev;               // Device number
+  uint sectorno;          // Sector number
+  struct sleeplock lock;  // Sleep lock for synchronization
+  uint refcnt;            // Reference count
+  struct buf *prev;       // Pointer to the previous buffer in the linked list
+  struct buf *next;       // Pointer to the next buffer in the linked list
+  uchar data[BSIZE];      // Data stored in the buffer
+};
+\end{lstlisting}
+定义了 \texttt{buf} 结构体，用于表示缓冲区。缓冲区结构体包含有效标志、磁盘所有权标志、设备号、扇区号、锁、引用计数、前后缓冲区指针以及数据。
+
+% \subsubsection{\texttt{ext4} 的设计与实现} 待补充
 
 \section{系统调用的设计实现}
 \subsection{系统调用流程}

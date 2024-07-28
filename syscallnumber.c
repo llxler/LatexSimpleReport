@@ -12,7 +12,7 @@
 #define SYS_dup 23
 #define SYS_dup3 24
 #define SYS_getpid 172
-#define SYS_sbrk 12  // from 12 to 214
+#define SYS_sbrk 12   // from 12 to 214
 #define SYS_brk 214
 #define SYS_sleep 13
 #define SYS_uptime 14
@@ -25,7 +25,7 @@
 #define SYS_close 57
 #define SYS_test_proc 22
 #define SYS_dev 10
-#define SYS_readdir 21  // comedymaker changed: from 24 to 21
+#define SYS_readdir 21   // comedymaker changed: from 24 to 21
 #define SYS_getcwd 17
 #define SYS_rename 26
 #define SYS_getppid 173

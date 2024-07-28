@@ -1,9 +1,9 @@
-// Saved registers for kernel context switches.
+// 用于内核上下文切换时保存的寄存器
 struct context {
-    uint64 ra;
-    uint64 sp;
+    uint64 ra; // 返回地址寄存器
+    uint64 sp; // 栈指针寄存器
 
-    // callee-saved
+    // 被调用者保存的寄存器
     uint64 s0;
     uint64 s1;
     uint64 s2;
