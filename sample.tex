@@ -432,7 +432,164 @@ Hajimi-OS 进程拥有独立页表，映射其虚拟地址空间到物理内存�
 \texttt{ext4} 提供了丰富的管理工具和选项，允许用户灵活配置和维护文件系统，简化了系统管理的复杂性。例如，文件系统的在线碎片整理和快速文件系统检查，使得管理员可以轻松维护系统的性能和可靠性。
 
 \subsubsection{Hajimi-OS 对 \texttt{ext4} 的适配}
-\paragraph{bio.c\\}
+
+\paragraph{\textbf{bio.c}}
+\subparagraph{缓存区概述}
+缓冲区缓存是包含磁盘块内容缓存副本的缓冲结构的链表。在内存中缓存磁盘块有助于减少磁盘读取次数，并为多个进程使用的磁盘块提供同步点。
+\subparagraph{接口}
+
+\begin{itemize}
+  \item 获取特定磁盘块的缓冲区，请调用 \texttt{bread}。
+  \item 更改缓冲区数据后，调用 \texttt{bwrite} 将其写入磁盘。
+  \item 使用缓冲区完成后，调用 \texttt{brelse}。
+  \item 调用 \texttt{brelse} 后不要使用缓冲区。
+  \item 一次只能有一个进程使用缓冲区，因此不要保留它们的时间过长。
+\end{itemize}
+
+\textbf{文件头}
+\begin{lstlisting}[style=c-style]
+#include "sys/types.h"
+#include "sys/param.h"
+#include "utils/spinlock.h"
+#include "utils/sleeplock.h"
+#include "sys/riscv.h"
+#include "fs/buf.h"
+#include "fs/sdcard.h"
+#include "utils/printf.h"
+#include "fs/disk.h"
+#include "proc/proc.h"
+#include "utils/string.h"
+\end{lstlisting}
+
+这些头文件提供了类型定义、参数、锁、文件系统和磁盘相关的函数和结构。
+
+\textbf{结构定义}
+
+\begin{lstlisting}[style=c-style]
+static struct buf Buf;
+struct fs_aux_info {
+    struct ext4_sblock *sb;             // 超级块指针
+    uint8_t *bg_desc_blk;               // 块组描述符块指针
+    struct xattr_list_element *xattrs;  // 扩展属性列表指针
+    uint32_t first_data_block;          // 第一个数据块的块号
+    uint64_t len_blocks;                // 文件系统的总块数
+    uint32_t inode_table_blocks;        // 每组的 inode 表块数
+    uint32_t groups;                    // 块组数量
+    uint32_t bg_desc_blocks;            // 块组描述符块数
+    uint32_t default_i_flags;           // 默认的 inode 标志
+    uint32_t blocks_per_ind;            // 每个间接块的块数
+    uint32_t blocks_per_dind;           // 每个双重间接块的块数
+    uint32_t blocks_per_tind;           // 每个三重间接块的块数
+};
+\end{lstlisting}
+
+\texttt{fs\_aux\_info} 结构体存储了与 \texttt{ext4} 文件系统相关的辅助信息，包括超级块、块组描述符、扩展属性、数据块信息等。
+
+\textbf{ext4 文件系统函数}
+
+\begin{lstlisting}[style=c-style]
+void ext4_bwrite(struct ext4_blockdev *bd) {
+  return;
+}
+// ext4_bwrite 函数是一个写块设备数据的占位符。此函数通常会向块设备写入数据。
+
+int ext4_open(struct ext4_blockdev *bd) {
+  return EOK;
+}
+// ext4_open 函数用于打开一个块设备并进行初始化。当前实现总是返回 EOK，表示操作成功。
+
+void ext4_close(struct ext4_blockdev *bd) {
+  return;
+}
+// ext4_close 函数用于关闭一个块设备并释放资源。此函数通常会执行一些清理工作。
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{ext4\_bwrite}: 用于将缓冲区内容写入 \texttt{ext4} 文件系统的磁盘设备。
+  \item \texttt{ext4\_open}: 打开 \texttt{ext4} 磁盘设备，返回操作状态。
+  \item \texttt{ext4\_close}: 关闭 \texttt{ext4} 磁盘设备。
+\end{itemize}
+
+\textbf{宏定义}
+\begin{lstlisting}[style=c-style]
+#define EXT4_DEV_BSIZE 4096
+
+#define EXT4_BLOCKDEV_STATIC_INSTANCE(__name, __bsize, __bcnt, __open,    \
+                                  __bread, __bwrite, __close, __lock, \
+                                  __unlock)                           \
+static uint8_t __name##_ph_bbuf[(__bsize)];                           \
+static struct ext4_blockdev_iface __name##_iface = {                  \
+    .open = __open,                                                   \
+    .bread_dev = __bread,                                             \
+    .bwrite_dev = __bwrite,                                           \
+    .close = __close,                                                 \
+    .lock = __lock,                                                   \
+    .unlock = __unlock,                                               \
+    .ph_bsize = __bsize,                                              \
+    .ph_bcnt = __bcnt,                                                \
+    .ph_bbuf = __name##_ph_bbuf,                                      \
+};                                                                    \
+static struct ext4_blockdev __name = {                                \
+    .bdif = &__name##_iface,                                          \
+    .part_offset = 0,                                                 \
+    .part_size = (__bcnt) * (__bsize),                                \
+}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{EXT4\_DEV\_BSIZE}: 定义了 \texttt{ext4} 设备的块大小，设置为 4096 字节。
+  \item \texttt{EXT4\_BLOCKDEV\_STATIC\_INSTANCE}: 用于定义 \texttt{ext4} 块设备的静态实例，设置相关操作接口如打开、读取、写入和关闭等。
+\end{itemize}
+
+\textbf{主要功能}
+
+\textbf{缓冲区读取 (bread)}
+
+\begin{lstlisting}[style=c-style]
+  struct buf* bread(uint dev, uint blockno) {
+    struct buf *b;
+
+    b = bget(dev, blockno);           // 获取指定设备和块号的缓冲区
+    if (!(b->flags & B_VALID)) {      // 检查缓冲区内容是否有效
+        b->flags |= B_DIRTY;          // 标记缓冲区为脏，需要写回
+        iderw(b);                     // 读取数据到缓冲区
+    }
+    return b;                         // 返回缓冲区
+}
+\end{lstlisting}
+
+从指定设备的指定块号读取缓冲区，如果缓冲区数据无效（未加载），则从磁盘读取数据并标记为脏。
+
+\textbf{缓冲区写入 (bwrite)}
+
+\begin{lstlisting}[style=c-style]
+void bwrite(struct buf *b) {
+    if (!(b->flags & B_DIRTY))        // 检查缓冲区是否标记为脏
+        panic("bwrite");              // 如果缓冲区没有被标记为脏，触发 panic
+    iderw(b);                         // 将缓冲区写回到磁盘
+}
+
+\end{lstlisting}
+
+将缓冲区写入磁盘，如果缓冲区未标记为脏数据，则引发错误。
+
+\textbf{释放缓冲区 (brelse)}
+
+\begin{lstlisting}[style=c-style]
+void brelse(struct buf *b) {
+    if (b->flags & B_BUSY)            // 检查缓冲区是否仍然被标记为忙
+        panic("brelse");              // 如果缓冲区仍然标记为忙，触发 panic
+    b->next = bcache.head;            // 将缓冲区插入缓存链表的头部
+    bcache.head = b;                  // 更新缓存链表的头部指针
+}
+
+\end{lstlisting}
+
+释放缓冲区，将其添加回缓存链表中供其他进程使用。
+
+\textbf{总结}
+
+实现了一个简单的缓冲区缓存系统，并提供了与 \texttt{ext4} 文件系统交互的基本功能。主要结构体和函数允许对 \texttt{ext4} 文件系统的块设备进行打开、读取、写入和关闭操作，并维护相关的辅助信息。
 
 \paragraph{buf.h\\}
 
